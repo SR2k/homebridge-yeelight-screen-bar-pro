@@ -1,11 +1,13 @@
 /* eslint-disable camelcase */
 
-import { AccessoryConfig } from 'homebridge'
+import { AccessoryConfig, CharacteristicValue } from 'homebridge'
 
 export interface IMapSetOptions<T> {
   debounce?: number
-  ensureActive?: boolean
-  update?: keyof T
+  update?: (value: CharacteristicValue, transformed: any, status: T) => T
+  check?: (value: CharacteristicValue, status: T|undefined) => boolean | Promise<boolean>
+  before?: (value: CharacteristicValue, status: T|undefined) => any
+  after?: (value: CharacteristicValue, status: T|undefined) => any
 }
 
 export const enum SwitchStatuses {

@@ -28,9 +28,6 @@ export class MiioDevice<TStatus> {
   private loadingLock = false;
   private status: TStatus|undefined;
 
-  private handleSetPower?: (on: boolean) => Promise<any>;
-  private handleGetPower?: (status?: TStatus) => boolean;
-
   private constructor(
     private readonly ip: string,
     private readonly token: string,
@@ -89,17 +86,6 @@ export class MiioDevice<TStatus> {
   };
 
   /**
-   * Some of the set action requires power to be on. So this hook.
-   */
-  registerPowerHooks(
-    getHook: (status?: TStatus) => boolean,
-    setHook: (on: boolean) => Promise<any>,
-  ) {
-    this.handleGetPower = getHook
-    this.handleSetPower = setHook
-  }
-
-  /**
    * Map a miio action into a Homebridge get handler.
    *
    * @param actionName The name for debug logging.
@@ -133,30 +119,35 @@ export class MiioDevice<TStatus> {
     transformer: (value: CharacteristicValue, status: TStatus|undefined) => any,
     options?: IMapSetOptions<TStatus>,
   ) {
-    const { debounce: debounceTime, ensureActive, update } = options || {}
+    const { debounce: debounceTime, update, before, after, check } = options || {}
 
     const fn = async (value: CharacteristicValue, callback?: CharacteristicSetCallback): Promise<void> => {
-      const transformed = transformer(value, this.status)
-      this.logger.debug(`${actionName} to:`, value, 'transformed:', transformed)
-
       try {
-        if (ensureActive && !this.handleGetPower?.(this.status)) {
-          await this.handleSetPower?.(true)
-        }
+        await before?.(value, this.status)
 
-        const connection = await this.getConnection()
-        const result = await connection.call(api, Array.isArray(transformed) ? transformed : [transformed])
-        this.logger.debug(actionName, result)
+        const checkResult = check?.(value, this.status) ?? true
+        if (checkResult) {
+          const transformed = transformer(value, this.status)
+          this.logger.debug(`${actionName} to:`, value, 'transformed:', transformed)
 
-        if (result[0] === 'ok') {
-          callback?.(null)
+          const connection = await this.getConnection()
+          const result = await connection.call(api, Array.isArray(transformed) ? transformed : [transformed])
+          this.logger.debug(actionName, result)
+          const resultCode = result[0]
 
-          if (update && this.status) {
-            this.status[update] = transformed as any
+          if (resultCode === 'ok') {
+            callback?.(null)
+            if (typeof update === 'function' && this.status) {
+              this.status = update(value, transformed, this.status)
+            }
+          } else {
+            callback?.(new Error(resultCode || 'Unknown Error'))
           }
         } else {
-          callback?.(new Error(result[0]))
+          callback?.(null)
         }
+
+        await after?.(value, this.status)
       } catch (error) {
         this.logger.error(actionName, error)
         callback?.(error)
