@@ -250,13 +250,15 @@ export class YeelightScreenBarProAccessory implements AccessoryPlugin {
     if (typeof bgPower !== 'undefined') {
       this.backgroundLightService?.setCharacteristic(On, this.powerGetterTransformer(bgPower))
     }
-    if (typeof bgBright !== 'undefined') {
-      this.backgroundLightService?.setCharacteristic(Brightness, this.brightnessGetterTransformer(bgBright))
-    }
 
-    if (this.config.backgroundColor && typeof bgRgb !== 'undefined') {
-      this.backgroundLightService?.setCharacteristic(Hue, this.hueGetterTransformer(bgRgb))
-      this.backgroundLightService?.setCharacteristic(Saturation, this.saturationGetterTransformer(bgRgb))
+    if (this.config.backgroundColor) {
+      if (typeof bgBright !== 'undefined') {
+        this.backgroundLightService?.setCharacteristic(Brightness, this.brightnessGetterTransformer(bgBright))
+      }
+      if (typeof bgRgb !== 'undefined') {
+        this.backgroundLightService?.setCharacteristic(Hue, this.hueGetterTransformer(bgRgb))
+        this.backgroundLightService?.setCharacteristic(Saturation, this.saturationGetterTransformer(bgRgb))
+      }
     }
   }
 }
