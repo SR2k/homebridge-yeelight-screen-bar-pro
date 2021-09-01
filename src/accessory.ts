@@ -33,6 +33,9 @@ export class YeelightScreenBarProAccessory implements AccessoryPlugin {
   private readonly services: HomebridgeService[] = [];
   private readonly device: MiioDevice<MiioProps>;
 
+  private mainLightService: HomebridgeService|undefined;
+  private backgroundLightService: HomebridgeService|undefined;
+
   private lastHue = 0;
   private lastSaturation = 0;
 
@@ -44,6 +47,8 @@ export class YeelightScreenBarProAccessory implements AccessoryPlugin {
     private readonly config: DehumidifierAccessoryConfig,
     private readonly api: API,
   ) {
+    this.config.backgroundColor = this.config.backgroundColor ?? true
+
     const { ip, token, pollingInterval } = this.config
     this.device = MiioDevice.getDevice(
       ip,
@@ -51,6 +56,7 @@ export class YeelightScreenBarProAccessory implements AccessoryPlugin {
       this.log,
       pollingInterval || DEFAULT_POLLING_INTERVAL,
       ALL_KEYS,
+      this.updateStates,
     )
 
     this.prepareAccessoryInformation()
@@ -109,6 +115,7 @@ export class YeelightScreenBarProAccessory implements AccessoryPlugin {
       .on('get', this.device.mapGet('getColorTemperature', result => normalizeToNewRange(+result.ct, [2700, 6500], [500, 140])))
 
     this.services.push(service)
+    this.mainLightService = service
   }
 
   private prepareBackgroundLightService() {
@@ -120,7 +127,7 @@ export class YeelightScreenBarProAccessory implements AccessoryPlugin {
     const service = new Lightbulb(displayName, 'background-light')
     service.setCharacteristic(Name, displayName || DEFAULT_BACKGROUND_NAME)
 
-    if (backgroundColor ?? true) {
+    if (backgroundColor) {
       this.mapOnAndBrightness(
         service,
         'bg_power',
@@ -142,11 +149,7 @@ export class YeelightScreenBarProAccessory implements AccessoryPlugin {
           },
           { check: YeelightScreenBarProAccessory.checkBackgroundLightPowerOn },
         ))
-        .on('get', this.device.mapGet('getHue', result => {
-          const currentColor = Color(colorRepresentativeToRgb(result?.bg_rgb) as any)
-          this.lastHue = currentColor.getHue()
-          return this.lastHue
-        }))
+        .on('get', this.device.mapGet('getHue', status => this.hueGetterTransformer(status.bg_rgb)))
 
       service.getCharacteristic(Saturation)
         .on('set', this.device.mapSet(
@@ -159,11 +162,7 @@ export class YeelightScreenBarProAccessory implements AccessoryPlugin {
           },
           { check: YeelightScreenBarProAccessory.checkBackgroundLightPowerOn },
         ))
-        .on('get', this.device.mapGet('getSaturation', result => {
-          const currentColor = Color(colorRepresentativeToRgb(result?.bg_rgb) as any)
-          this.lastSaturation = currentColor.getSaturation() * 100
-          return this.lastSaturation
-        }))
+        .on('get', this.device.mapGet('getSaturation', (status) => this.saturationGetterTransformer(status.bg_rgb)))
     } else {
       service.getCharacteristic(On)
         .on('set', this.device.mapSet(
@@ -172,10 +171,11 @@ export class YeelightScreenBarProAccessory implements AccessoryPlugin {
           value => this.getSmoothedValue(value ? SwitchStatuses.On : SwitchStatuses.Off),
           { update: (_, transformed, status) => ({ ...status, bg_power: transformed[0] }) },
         ))
-        .on('get', this.device.mapGet('getBgOnOff', result => result.bg_power === SwitchStatuses.On))
+        .on('get', this.device.mapGet('getBgOnOff', result => this.powerGetterTransformer(result.power)))
     }
 
     this.services.push(service)
+    this.backgroundLightService = service
   }
 
   private mapOnAndBrightness(
@@ -197,7 +197,7 @@ export class YeelightScreenBarProAccessory implements AccessoryPlugin {
     )
     service.getCharacteristic(On)
       .on('set', setPower)
-      .on('get', this.device.mapGet(`get${onOffName}`, result => result[onOffStatusKey] === SwitchStatuses.On))
+      .on('get', this.device.mapGet(`get${onOffName}`, result => this.powerGetterTransformer(result[onOffStatusKey])))
 
     const setBrightness = this.device.mapSet(
       `set${brightnessName}`,
@@ -220,5 +220,43 @@ export class YeelightScreenBarProAccessory implements AccessoryPlugin {
   private getSmoothedValue = (value: CharacteristicValue) => {
     const { smoothInterval = DEFAULT_SMOOTH_INTERVAL } = this.config
     return [value, 'smooth', smoothInterval]
+  }
+
+  private readonly powerGetterTransformer = (p: MiioProps['power']|MiioProps['bg_power']) => p === SwitchStatuses.On
+  private readonly brightnessGetterTransformer = (b: MiioProps['bright']|MiioProps['bg_bright']) => +b
+  private readonly hueGetterTransformer = (r: MiioProps['bg_rgb']) => {
+    const currentColor = Color(colorRepresentativeToRgb(r) as any)
+    this.lastHue = currentColor.getHue()
+    return this.lastHue
+  }
+  private readonly saturationGetterTransformer = (r: MiioProps['bg_rgb']) => {
+    const currentColor = Color(colorRepresentativeToRgb(r) as any)
+    this.lastSaturation = currentColor.getSaturation() * 100
+    return this.lastSaturation
+  }
+
+  private updateStates = (changedState: Partial<MiioProps>) => {
+    if (!this.mainLightService || !this.backgroundLightService || !changedState) return
+
+    const { power, bg_power: bgPower, bright, bg_bright: bgBright, bg_rgb: bgRgb } = changedState
+    const { On, Brightness, Hue, Saturation } = this.api.hap.Characteristic
+
+    if (typeof power !== 'undefined') {
+      this.mainLightService?.setCharacteristic(On, this.powerGetterTransformer(power))
+    }
+    if (typeof bright !== 'undefined') {
+      this.mainLightService?.setCharacteristic(Brightness, this.brightnessGetterTransformer(bright))
+    }
+    if (typeof bgPower !== 'undefined') {
+      this.backgroundLightService?.setCharacteristic(On, this.powerGetterTransformer(bgPower))
+    }
+    if (typeof bgBright !== 'undefined') {
+      this.backgroundLightService?.setCharacteristic(Brightness, this.brightnessGetterTransformer(bgBright))
+    }
+
+    if (this.config.backgroundColor && typeof bgRgb !== 'undefined') {
+      this.backgroundLightService?.setCharacteristic(Hue, this.hueGetterTransformer(bgRgb))
+      this.backgroundLightService?.setCharacteristic(Saturation, this.saturationGetterTransformer(bgRgb))
+    }
   }
 }

@@ -16,9 +16,10 @@ export class MiioDevice<TStatus> {
     logger: Pick<Logger, 'debug'|'error'>,
     pullingInterval: number,
     keys: Array<keyof T>,
+    updateStates: (changedStates: Partial<T>, state: T) => any,
   ): MiioDevice<T> {
     if (typeof this.createdDevices[token] === 'undefined') {
-      this.createdDevices[token] = new MiioDevice(ip, token, logger, pullingInterval, keys)
+      this.createdDevices[token] = new MiioDevice(ip, token, logger, pullingInterval, keys, updateStates)
     }
 
     return this.createdDevices[token]
@@ -34,6 +35,7 @@ export class MiioDevice<TStatus> {
     private readonly logger: Pick<Logger, 'debug'|'error'>,
     private readonly pullingInterval: number,
     private readonly keys: Array<keyof TStatus>,
+    private readonly updateStates: (changedStates: Partial<TStatus>, state: TStatus) => any,
   ) {
     this.loop()
   }
@@ -68,10 +70,17 @@ export class MiioDevice<TStatus> {
     try {
       const connection = await this.getConnection()
       const data = await connection.call('get_prop', this.keys)
+      const changedStates: Partial<TStatus> = {}
       this.keys.forEach((key, i) => {
-        status[key] = data[i]
+        const value = data[i]
+        status[key] = value
+
+        if (!this.status || this.status[key] !== value) {
+          changedStates[key] = value
+        }
       })
       this.status = status
+      this.updateStates(changedStates, status)
       this.logger.debug('Data fetched', data, status)
     } catch (err) {
       this.logger.error('Error occurred when fetching data:', err)
