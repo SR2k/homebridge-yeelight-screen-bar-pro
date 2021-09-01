@@ -10,7 +10,7 @@ import {
   DEFAULT_POLLING_INTERVAL,
   DEFAULT_SMOOTH_INTERVAL,
 } from './constants'
-import { DehumidifierAccessoryConfig, MiioProps, SwitchStatuses } from './typings'
+import { DehumidifierAccessoryConfig, IMapSetOptions, MiioProps, SwitchStatuses } from './typings'
 import { colorRepresentativeToRgb, hueSaturationToColorRepresentative, normalizeToNewRange } from './utils'
 
 const ALL_KEYS: Array<keyof MiioProps> = [
@@ -100,6 +100,7 @@ export class YeelightScreenBarProAccessory implements AccessoryPlugin {
       'set_bright',
       'OnOff',
       'Brightness',
+      YeelightScreenBarProAccessory.checkPowerOn,
     )
 
     service.getCharacteristic(ColorTemperature)
@@ -136,6 +137,7 @@ export class YeelightScreenBarProAccessory implements AccessoryPlugin {
         'bg_set_bright',
         'BgOnOff',
         'BgBrightness',
+        YeelightScreenBarProAccessory.checkBackgroundLightPowerOn,
       )
 
       service.getCharacteristic(Hue)
@@ -186,6 +188,7 @@ export class YeelightScreenBarProAccessory implements AccessoryPlugin {
     brightnessApi: string,
     onOffName: string,
     brightnessName: string,
+    checkPower: IMapSetOptions<MiioProps>['check'],
   ) {
     const { On, Brightness } = this.api.hap.Characteristic
 
@@ -203,7 +206,7 @@ export class YeelightScreenBarProAccessory implements AccessoryPlugin {
       `set${brightnessName}`,
       brightnessApi,
       value => this.getSmoothedValue(value),
-      { check: YeelightScreenBarProAccessory.checkPowerOn },
+      { check: checkPower },
     )
     service.getCharacteristic(Brightness)
       // eslint-disable-next-line consistent-return
