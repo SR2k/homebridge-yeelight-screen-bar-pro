@@ -3,10 +3,14 @@ import Color from 'color-js'
 
 import { MiioDevice } from './miio-device'
 import {
-  DEFAULT_BACKGROUND_NAME, DEFAULT_MANUFACTURER, DEFAULT_MODEL, DEFAULT_POLLING_INTERVAL,
-  DEFAULT_DISPLAY_NAME, DEFAULT_SMOOTH_INTERVAL,
+  DEFAULT_BACKGROUND_NAME,
+  DEFAULT_DISPLAY_NAME,
+  DEFAULT_MANUFACTURER,
+  DEFAULT_MODEL,
+  DEFAULT_POLLING_INTERVAL,
+  DEFAULT_SMOOTH_INTERVAL,
 } from './constants'
-import { MiioProps, DehumidifierAccessoryConfig, SwitchStatuses } from './typings'
+import { DehumidifierAccessoryConfig, MiioProps, SwitchStatuses } from './typings'
 import { colorRepresentativeToRgb, hueSaturationToColorRepresentative, normalizeToNewRange } from './utils'
 
 const ALL_KEYS: Array<keyof MiioProps> = [
@@ -76,29 +80,21 @@ export class YeelightScreenBarProAccessory implements AccessoryPlugin {
   private prepareMainLightService() {
     const { name: displayName } = this.config
     const { Service, Characteristic } = this.api.hap
-    const { Name, Active, Brightness, ColorTemperature } = Characteristic
+    const { Name, ColorTemperature } = Characteristic
     const { Lightbulb } = Service
 
     const service = new Lightbulb(displayName, 'main-light')
     service.setCharacteristic(Name, displayName || DEFAULT_DISPLAY_NAME)
 
-    service.getCharacteristic(Active)
-      .on('set', this.device.mapSet(
-        'setActive',
-        'set_power',
-        value => this.getSmoothedValue(value ? SwitchStatuses.On : SwitchStatuses.Off),
-        { update: (_, transformed, status) => ({ ...status, power: transformed[0] }) },
-      ))
-      .on('get', this.device.mapGet('getActive', result => result.power === SwitchStatuses.On))
-
-    service.getCharacteristic(Brightness)
-      .on('set', this.device.mapSet(
-        'setBrightness',
-        'set_bright',
-        value => this.getSmoothedValue(value),
-        { check: YeelightScreenBarProAccessory.checkPowerOn },
-      ))
-      .on('get', this.device.mapGet('getBrightness', result => +result.bright))
+    this.mapOnAndBrightness(
+      service,
+      'power',
+      'bright',
+      'set_power',
+      'set_bright',
+      'OnOff',
+      'Brightness',
+    )
 
     service.getCharacteristic(ColorTemperature)
       .on('set', this.device.mapSet(
@@ -116,67 +112,109 @@ export class YeelightScreenBarProAccessory implements AccessoryPlugin {
   }
 
   private prepareBackgroundLightService() {
-    const { backgroundName: displayName } = this.config
+    const { backgroundName: displayName, backgroundColor } = this.config
     const { Service, Characteristic } = this.api.hap
-    const { Name, Active, Brightness, Hue, Saturation } = Characteristic
+    const { On, Name, Hue, Saturation } = Characteristic
     const { Lightbulb } = Service
 
     const service = new Lightbulb(displayName, 'background-light')
     service.setCharacteristic(Name, displayName || DEFAULT_BACKGROUND_NAME)
 
-    service.getCharacteristic(Active)
-      .on('set', this.device.mapSet(
-        'setActive',
+    if (backgroundColor ?? true) {
+      this.mapOnAndBrightness(
+        service,
+        'bg_power',
+        'bg_bright',
         'bg_set_power',
-        value => this.getSmoothedValue(value ? SwitchStatuses.On : SwitchStatuses.Off),
-        { update: (_, transformed, status) => ({ ...status, bg_power: transformed[0] }) },
-      ))
-      .on('get', this.device.mapGet('getActive', result => result.power === SwitchStatuses.On))
-
-    service.getCharacteristic(Brightness)
-      .on('set', this.device.mapSet(
-        'setBrightness',
         'bg_set_bright',
-        value => this.getSmoothedValue(value),
-        { check: YeelightScreenBarProAccessory.checkBackgroundLightPowerOn },
-      ))
-      .on('get', this.device.mapGet('getBrightness', result => +result.bg_bright))
+        'BgOnOff',
+        'BgBrightness',
+      )
 
-    service.getCharacteristic(Hue)
-      .on('set', this.device.mapSet(
-        'setHue',
-        'bg_set_rgb',
-        (_value) => {
-          const value = _value as number
-          this.lastHue = value
-          return hueSaturationToColorRepresentative(value, this.lastSaturation)
-        },
-        { check: YeelightScreenBarProAccessory.checkBackgroundLightPowerOn },
-      ))
-      .on('get', this.device.mapGet('getHue', result => {
-        const currentColor = Color(colorRepresentativeToRgb(result?.bg_rgb) as any)
-        this.lastHue = currentColor.getHue()
-        return this.lastHue
-      }))
+      service.getCharacteristic(Hue)
+        .on('set', this.device.mapSet(
+          'setHue',
+          'bg_set_rgb',
+          (_value) => {
+            const value = _value as number
+            this.lastHue = value
+            return hueSaturationToColorRepresentative(value, this.lastSaturation)
+          },
+          { check: YeelightScreenBarProAccessory.checkBackgroundLightPowerOn },
+        ))
+        .on('get', this.device.mapGet('getHue', result => {
+          const currentColor = Color(colorRepresentativeToRgb(result?.bg_rgb) as any)
+          this.lastHue = currentColor.getHue()
+          return this.lastHue
+        }))
 
-    service.getCharacteristic(Saturation)
-      .on('set', this.device.mapSet(
-        'setSaturation',
-        'bg_set_rgb',
-        (_value) => {
-          const value = _value as number
-          this.lastSaturation = value
-          return hueSaturationToColorRepresentative(this.lastSaturation, value)
-        },
-        { check: YeelightScreenBarProAccessory.checkBackgroundLightPowerOn },
-      ))
-      .on('get', this.device.mapGet('getSaturation', result => {
-        const currentColor = Color(colorRepresentativeToRgb(result?.bg_rgb) as any)
-        this.lastSaturation = currentColor.getSaturation() * 100
-        return this.lastSaturation
-      }))
+      service.getCharacteristic(Saturation)
+        .on('set', this.device.mapSet(
+          'setSaturation',
+          'bg_set_rgb',
+          (_value) => {
+            const value = _value as number
+            this.lastSaturation = value
+            return hueSaturationToColorRepresentative(this.lastSaturation, value)
+          },
+          { check: YeelightScreenBarProAccessory.checkBackgroundLightPowerOn },
+        ))
+        .on('get', this.device.mapGet('getSaturation', result => {
+          const currentColor = Color(colorRepresentativeToRgb(result?.bg_rgb) as any)
+          this.lastSaturation = currentColor.getSaturation() * 100
+          return this.lastSaturation
+        }))
+    } else {
+      service.getCharacteristic(On)
+        .on('set', this.device.mapSet(
+          'setBgOnOff',
+          'bg_set_power',
+          value => this.getSmoothedValue(value ? SwitchStatuses.On : SwitchStatuses.Off),
+          { update: (_, transformed, status) => ({ ...status, bg_power: transformed[0] }) },
+        ))
+        .on('get', this.device.mapGet('getBgOnOff', result => result.bg_power === SwitchStatuses.On))
+    }
 
     this.services.push(service)
+  }
+
+  private mapOnAndBrightness(
+    service: HomebridgeService,
+    onOffStatusKey: keyof MiioProps,
+    brightnessStatusKey: keyof MiioProps,
+    onOffApi: string,
+    brightnessApi: string,
+    onOffName: string,
+    brightnessName: string,
+  ) {
+    const { On, Brightness } = this.api.hap.Characteristic
+
+    const setPower = this.device.mapSet(
+      `set${onOffName}`,
+      onOffApi,
+      value => this.getSmoothedValue(value ? SwitchStatuses.On : SwitchStatuses.Off),
+      { update: (_, transformed, status) => ({ ...status, [onOffStatusKey]: transformed[0] }) },
+    )
+    service.getCharacteristic(On)
+      .on('set', setPower)
+      .on('get', this.device.mapGet(`get${onOffName}`, result => result[onOffStatusKey] === SwitchStatuses.On))
+
+    const setBrightness = this.device.mapSet(
+      `set${brightnessName}`,
+      brightnessApi,
+      value => this.getSmoothedValue(value),
+      { check: YeelightScreenBarProAccessory.checkPowerOn },
+    )
+    service.getCharacteristic(Brightness)
+      // eslint-disable-next-line consistent-return
+      .on('set', (value, cb) => {
+        if (value === 0) return setPower(false, cb)
+        setBrightness(value, cb)
+      })
+      .on('get', this.device.mapGet(`get${brightnessName}`, result => {
+        if (result[onOffStatusKey] !== SwitchStatuses.On) return 0
+        return +result[brightnessStatusKey]
+      }))
   }
 
   private getSmoothedValue = (value: CharacteristicValue) => {

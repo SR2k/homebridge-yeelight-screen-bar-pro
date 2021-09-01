@@ -24,6 +24,7 @@ export interface DehumidifierAccessoryConfig extends AccessoryConfig {
   manufacturer?: string
   smoothInterval?: number
   backgroundName?: string
+  backgroundColor?: boolean
 }
 
 export type NumberString = string
