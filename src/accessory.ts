@@ -14,7 +14,6 @@ import { DehumidifierAccessoryConfig, IMapSetOptions, MiioProps, SwitchStatuses 
 import { colorRepresentativeToRgb, hueSaturationToColorRepresentative, normalizeToNewRange } from './utils'
 
 const ALL_KEYS: Array<keyof MiioProps> = [
-  'power',
   'bright',
   'ct',
   'color_mode',
@@ -27,6 +26,7 @@ const ALL_KEYS: Array<keyof MiioProps> = [
   'bg_power',
   'bg_lmode',
   'bg_ct',
+  'power',
 ]
 
 export class YeelightScreenBarProAccessory implements AccessoryPlugin {
@@ -39,7 +39,7 @@ export class YeelightScreenBarProAccessory implements AccessoryPlugin {
   private lastHue = 0;
   private lastSaturation = 0;
 
-  private static readonly checkPowerOn = (_: any, status?: MiioProps) => status?.power === SwitchStatuses.On
+  private static readonly checkPowerOn = (_: any, status?: MiioProps) => status?.main_power === SwitchStatuses.On
   private static readonly checkBackgroundLightPowerOn = (_: any, status?: MiioProps) => status?.bg_power === SwitchStatuses.On
 
   constructor(
@@ -94,7 +94,7 @@ export class YeelightScreenBarProAccessory implements AccessoryPlugin {
 
     this.mapOnAndBrightness(
       service,
-      'power',
+      'main_power',
       'bright',
       'set_power',
       'set_bright',
@@ -173,7 +173,7 @@ export class YeelightScreenBarProAccessory implements AccessoryPlugin {
           value => this.getSmoothedValue(value ? SwitchStatuses.On : SwitchStatuses.Off),
           { update: (_, transformed, status) => ({ ...status, bg_power: transformed[0] }) },
         ))
-        .on('get', this.device.mapGet('getBgOnOff', result => this.powerGetterTransformer(result.power)))
+        .on('get', this.device.mapGet('getBgOnOff', result => this.powerGetterTransformer(result.bg_power)))
     }
 
     this.services.push(service)
@@ -195,7 +195,7 @@ export class YeelightScreenBarProAccessory implements AccessoryPlugin {
     const setPower = this.device.mapSet(
       `set${onOffName}`,
       onOffApi,
-      value => this.getSmoothedValue(value ? SwitchStatuses.On : SwitchStatuses.Off),
+      value => [value ? SwitchStatuses.On : SwitchStatuses.Off],
       { update: (_, transformed, status) => ({ ...status, [onOffStatusKey]: transformed[0] }) },
     )
     service.getCharacteristic(On)
@@ -225,7 +225,7 @@ export class YeelightScreenBarProAccessory implements AccessoryPlugin {
     return [value, 'smooth', smoothInterval]
   }
 
-  private readonly powerGetterTransformer = (p: MiioProps['power']|MiioProps['bg_power']) => p === SwitchStatuses.On
+  private readonly powerGetterTransformer = (p: MiioProps['main_power']|MiioProps['bg_power']) => p === SwitchStatuses.On
   private readonly brightnessGetterTransformer = (b: MiioProps['bright']|MiioProps['bg_bright']) => +b
   private readonly hueGetterTransformer = (r: MiioProps['bg_rgb']) => {
     const currentColor = Color(colorRepresentativeToRgb(r) as any)
@@ -241,26 +241,26 @@ export class YeelightScreenBarProAccessory implements AccessoryPlugin {
   private updateStates = (changedState: Partial<MiioProps>) => {
     if (!this.mainLightService || !this.backgroundLightService || !changedState) return
 
-    const { power, bg_power: bgPower, bright, bg_bright: bgBright, bg_rgb: bgRgb } = changedState
+    const { main_power: mainPower, bg_power: bgPower, bright, bg_bright: bgBright, bg_rgb: bgRgb } = changedState
     const { On, Brightness, Hue, Saturation } = this.api.hap.Characteristic
 
-    if (typeof power !== 'undefined') {
-      this.mainLightService?.setCharacteristic(On, this.powerGetterTransformer(power))
+    if (typeof mainPower !== 'undefined') {
+      this.mainLightService?.updateCharacteristic(On, this.powerGetterTransformer(mainPower))
     }
     if (typeof bright !== 'undefined') {
-      this.mainLightService?.setCharacteristic(Brightness, this.brightnessGetterTransformer(bright))
+      this.mainLightService?.updateCharacteristic(Brightness, this.brightnessGetterTransformer(bright))
     }
     if (typeof bgPower !== 'undefined') {
-      this.backgroundLightService?.setCharacteristic(On, this.powerGetterTransformer(bgPower))
+      this.backgroundLightService?.updateCharacteristic(On, this.powerGetterTransformer(bgPower))
     }
 
     if (this.config.backgroundColor) {
       if (typeof bgBright !== 'undefined') {
-        this.backgroundLightService?.setCharacteristic(Brightness, this.brightnessGetterTransformer(bgBright))
+        this.backgroundLightService?.updateCharacteristic(Brightness, this.brightnessGetterTransformer(bgBright))
       }
       if (typeof bgRgb !== 'undefined') {
-        this.backgroundLightService?.setCharacteristic(Hue, this.hueGetterTransformer(bgRgb))
-        this.backgroundLightService?.setCharacteristic(Saturation, this.saturationGetterTransformer(bgRgb))
+        this.backgroundLightService?.updateCharacteristic(Hue, this.hueGetterTransformer(bgRgb))
+        this.backgroundLightService?.updateCharacteristic(Saturation, this.saturationGetterTransformer(bgRgb))
       }
     }
   }

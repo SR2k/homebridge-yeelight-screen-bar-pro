@@ -30,7 +30,6 @@ export interface DehumidifierAccessoryConfig extends AccessoryConfig {
 export type NumberString = string
 
 export interface MiioProps {
-  power: SwitchStatuses
   bright: NumberString
   ct: NumberString
   color_mode: any // TODO
@@ -43,4 +42,5 @@ export interface MiioProps {
   bg_power: SwitchStatuses
   bg_lmode: any // TODO
   bg_ct: NumberString
+  power: SwitchStatuses
 }

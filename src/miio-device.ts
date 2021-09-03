@@ -66,22 +66,19 @@ export class MiioDevice<TStatus> {
     }
     this.loadingLock = true
 
-    const status: TStatus = {} as any
+    const newStatus: TStatus = {} as any
     try {
       const connection = await this.getConnection()
       const data = await connection.call('get_prop', this.keys)
       const changedStates: Partial<TStatus> = {}
       this.keys.forEach((key, i) => {
-        const value = data[i]
-        status[key] = value
-
-        if (!this.status || this.status[key] !== value) {
-          changedStates[key] = value
-        }
+        const newValue = data[i]
+        newStatus[key] = newValue
+        if (!this.status || this.status[key] !== newValue) changedStates[key] = newValue
       })
-      this.status = status
-      this.updateStates(changedStates, status)
-      this.logger.debug('Data fetched', data, status)
+      this.status = newStatus
+      this.updateStates(changedStates, newStatus)
+      this.logger.debug('Data fetched', data, this.status)
     } catch (err) {
       this.logger.error('Error occurred when fetching data:', err)
     }
