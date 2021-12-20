@@ -156,7 +156,7 @@ export class MiioDevice<TStatus> {
         await after?.(value, this.status)
       } catch (error) {
         this.logger.error(actionName, error)
-        callback?.(error)
+        callback?.(error as any)
       }
     }
 
