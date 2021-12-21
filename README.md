@@ -12,12 +12,12 @@ Your screen bar should looks like this one:
 
 ## Usage 使用
 
-First, install the plugin, you might need `sudo`:
+Firstly, install the plugin. You might need `sudo`:
 
 首先，请安装本插件，你可能需要使用 `sudo`：
 
 ```shell
-npm i -g Homebridge-new-widetech-internet-dehumidifier
+npm i -g homebridge-yeelight-screen-bar-pro
 ```
 
 Then head to Homebridge `config.json`, and add a new accessory:
@@ -57,8 +57,8 @@ Fields explained:
 - `smoothInterval` (number): The animation duration in milliseconds.
 - `backgroundName` (string): Name for the second light bulb accessory to control ambient light.
 - `backgroundColor` (boolean):
-    - `true`: Map ambient light to a color light bulb. This lets you control the ambient color and brightness via Siri or Home app.
-    - `false`: Map the ambient light to a switch-only bulb. You can choose the mode of ambient in MiHome app, lets you to use all of the advanced ambient modes.
+  - `true`: Map ambient light to a color light bulb. This lets you control the ambient color and brightness via Siri or Home app.
+  - `false`: Map the ambient light to a switch-only bulb. You can choose the mode of ambient in MiHome app, lets you to use all of the advanced ambient modes.
 
 配置字段如下：
 
@@ -71,8 +71,8 @@ Fields explained:
 - `smoothInterval` (number): 切换灯光状态时的动画间隔
 - `backgroundName` (string): 背景灯的名称
 - `backgroundColor` (boolean):
-    - `true`: 将背景灯映射为一个彩色灯。此模式下你可以用 Siri 和 Home app 来控制背景灯的颜色和亮度
-    - `false`: 将背景灯映射到一个只能切换开/关状态的灯。你需要在米家 app 中选择背景灯的模式。此模式下你可以使用各种高级的背景样式（比如跑马灯、流光等）
+  - `true`: 将背景灯映射为一个彩色灯。此模式下你可以用 Siri 和 Home app 来控制背景灯的颜色和亮度
+  - `false`: 将背景灯映射到一个只能切换开/关状态的灯。你需要在米家 app 中选择背景灯的模式。此模式下你可以使用各种高级的背景样式（比如跑马灯、流光等）
 
 ## Develop 本地开发
 

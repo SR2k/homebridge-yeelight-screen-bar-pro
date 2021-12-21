@@ -1,7 +1,7 @@
 {
   "displayName": "HomeBridge Plugin Yeelight Screen Bar Pro",
   "name": "homebridge-yeelight-screen-bar-pro",
-  "version": "0.0.1-beta.7",
+  "version": "0.0.1-beta.8",
   "description": "Connects your Yeelight Screen Bar Pro to HomeKit via HomeBridge",
   "license": "MIT",
   "repository": {
