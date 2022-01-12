@@ -161,7 +161,7 @@ export class MiioDevice<TStatus> {
     }
 
     if (typeof debounceTime === 'number') {
-      return debounce(fn, debounceTime) as any as typeof fn
+      return debounce(fn, debounceTime, { trailing: true }) as any as typeof fn
     }
 
     return fn

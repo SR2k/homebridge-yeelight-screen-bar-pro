@@ -10,6 +10,20 @@ Your screen bar should looks like this one:
 
 ![](https://img.alicdn.com/imgextra/https://img.alicdn.com/imgextra/i1/2738299213/O1CN01zWKhnw2Hvbctnxh1Z_!!2738299213.jpg)
 
+## Supported Devices 支持设备列表
+
+### Yeelight Screen Bar Pro 易来显示器挂灯
+
+This plugin is originally made for the pro version. All of the features could be supported.
+
+本插件是专为 Pro 版本开发的，因此所有功能在 Pro 版挂灯上均可使用。
+
+### Yeelight Screen Bar (Non-pro, standard version) 易来显示器挂灯标准版
+
+(@ZhibinLiIntel)[https://github.com/ZhibinLiIntel] has tested the plugin with the standard version. It should work well. See [this](https://github.com/SR2k/homebridge-yeelight-screen-bar-pro/issues/3#issuecomment-1003679115).
+
+(@ZhibinLiIntel)[https://github.com/ZhibinLiIntel] 在标准版上进行了测试，本插件也可以工作。参阅[这个 issue](https://github.com/SR2k/homebridge-yeelight-screen-bar-pro/issues/3#issuecomment-1003679115)。
+
 ## Usage 使用
 
 Firstly, install the plugin. You might need `sudo`:

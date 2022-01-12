@@ -196,7 +196,10 @@ export class YeelightScreenBarProAccessory implements AccessoryPlugin {
       `set${onOffName}`,
       onOffApi,
       value => [value ? SwitchStatuses.On : SwitchStatuses.Off],
-      { update: (_, transformed, status) => ({ ...status, [onOffStatusKey]: transformed[0] }) },
+      {
+        update: (_, transformed, status) => ({ ...status, [onOffStatusKey]: transformed[0] }),
+        debounce: 150,
+      },
     )
     service.getCharacteristic(On)
       .on('set', setPower)
@@ -209,9 +212,8 @@ export class YeelightScreenBarProAccessory implements AccessoryPlugin {
       { check: checkPower },
     )
     service.getCharacteristic(Brightness)
-      // eslint-disable-next-line consistent-return
       .on('set', (value, cb) => {
-        if (value === 0) return setPower(false, cb)
+        if (value === 0) return
         setBrightness(value, cb)
       })
       .on('get', this.device.mapGet(`get${brightnessName}`, result => {
