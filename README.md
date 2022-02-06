@@ -32,6 +32,7 @@ Then head to Homebridge `config.json`, and add a new accessory:
     // ... extra accessories
 
     {
+      "name": "YeelightScreenBarPro",
       "accessory": "YeelightScreenBarPro",
       "ip": "10.0.1.5",
       "token": "the-top-secret-token"
@@ -40,9 +41,26 @@ Then head to Homebridge `config.json`, and add a new accessory:
 }
 ```
 
-Now reboot Homebridge and turn to your Apple Home app.
+Replace your own token and ip address (If you don't know how to get ip address and token, read [this](https://github.com/PiotrMachowski/Xiaomi-cloud-tokens-extractor)
 
-重启 Homebridge 后，请前往 Apple Home app。
+将 IP 地址和 token 替换为你自己的 (如果你不知道如何获取 IP 地址和 token ，请看[这里](https://github.com/PiotrMachowski/Xiaomi-cloud-tokens-extractor)
+
+Now reboot Homebridge and turn to your Apple Home app on your Apple device.
+
+重启 Homebridge 后，请使用你的苹果设备前往Home app
+
+Make sure you are using the owner user of the home to set up the Home app
+
+请确保你正在使用当前Home的所有者来设置Home app
+
+In Home app, Click " + " Button then click " Add accessory "
+
+在Home app中，点击 " + " 按钮， 然后点击 “ 添加配件 “
+
+Scan the QR code in your HomeBridge Status screen
+
+扫描HomeBridge中Status页面下的二维码
+
 
 ## Config 配置
 
@@ -50,21 +68,23 @@ Fields explained:
 
 - `ip` (string, required): The IP address of the screen bar
 - `token` (string, required): The miio token. In case you don't know what a token is, read [this](https://github.com/Maxmudjon/com.xiaomi-miio/blob/master/docs/obtain_token.md#obtain-mi-home-device-token)
+- `name` (string, required): The name display in HomeKit and log
 - `pollingInterval` (number): How often to fetch status of the screen bar in milliseconds.
 - `serial` (string): Serial Number field displayed in Home app. Will use the `token` field if absent
 - `model` (string): Model field displayed in Home app
 - `manufacturer`: Manufacturer field in Home app
-- `smoothInterval` (number): The animation duration in milliseconds.
-- `backgroundName` (string): Name for the second light bulb accessory to control ambient light.
+- `smoothInterval` (number): The animation duration in milliseconds
+- `backgroundName` (string): Name for the second light bulb accessory to control ambient light
 - `backgroundColor` (boolean):
-  - `true`: Map ambient light to a color light bulb. This lets you control the ambient color and brightness via Siri or Home app.
-  - `false`: Map the ambient light to a switch-only bulb. You can choose the mode of ambient in MiHome app, lets you to use all of the advanced ambient modes.
+  - `true`: Map ambient light to a color light bulb. This lets you control the ambient color and brightness via Siri or Home app
+  - `false`: Map the ambient light to a switch-only bulb. You can choose the mode of ambient in MiHome app, lets you use all of the advanced ambient modes
 
 配置字段如下：
 
 - `ip` (必填): 屏幕挂灯的 IP 地址
-- `token` (必填): miio 密钥。如果您不知道这是啥，请看[这里](https://github.com/Maxmudjon/com.xiaomi-miio/blob/master/docs/obtain_token.md#obtain-mi-home-device-token)
-- `name`: 展示名称，用于在 HomeKit 中现实和打日志
+- `token` (必填): miio 密钥。如果你不知道这是啥，请看[这里](https://github.com/Maxmudjon/com.xiaomi-miio/blob/master/docs/obtain_token.md#obtain-mi-home-device-token)
+- `name` (必填): 展示名称，用于在 HomeKit 中显示和日志中显示
+- `pollingInterval` (number): 获取屏幕挂灯状态的频率（单位：毫秒）
 - `serial`: Home app 中显示的序列号，如果为空，会使用上面的 `token` 字段
 - `model`: Home app 中显示的型号
 - `manufacturer`: Home app 中显示的制造商
