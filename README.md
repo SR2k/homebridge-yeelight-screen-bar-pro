@@ -61,7 +61,6 @@ Scan the QR code in your HomeBridge Status screen
 
 扫描HomeBridge中Status页面下的二维码
 
-
 ## Config 配置
 
 Fields explained:
