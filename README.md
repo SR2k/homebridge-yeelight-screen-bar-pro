@@ -41,25 +41,25 @@ Then head to Homebridge `config.json`, and add a new accessory:
 }
 ```
 
-Replace your own token and ip address (If you don't know how to get ip address and token, read [this](https://github.com/PiotrMachowski/Xiaomi-cloud-tokens-extractor)
+Replace your own token and IP address (If you don't know how to get IP address and token, read [this](https://github.com/PiotrMachowski/Xiaomi-cloud-tokens-extractor)
 
-将 IP 地址和 token 替换为你自己的 (如果你不知道如何获取 IP 地址和 token ，请看[这里](https://github.com/PiotrMachowski/Xiaomi-cloud-tokens-extractor)
+将 IP 地址和 token 替换为你自己的 (如果你不知道如何获取 IP 地址和 token ，请看 [这里](https://github.com/PiotrMachowski/Xiaomi-cloud-tokens-extractor)
 
 Now reboot Homebridge and turn to your Apple Home app on your Apple device.
 
-重启 Homebridge 后，请使用你的苹果设备前往Home app
+重启 Homebridge 后，请使用你的苹果设备前往 Home app
 
 Make sure you are using the owner user of the home to set up the Home app
 
-请确保你正在使用当前Home的所有者来设置Home app
+请确保你正在使用当前Home的所有者来设置 Home app
 
 In Home app, Click " + " Button then click " Add accessory "
 
-在Home app中，点击 " + " 按钮， 然后点击 “ 添加配件 “
+在 Home app 中，点击 " + " 按钮， 然后点击 “ 添加配件 “
 
 Scan the QR code in your HomeBridge Status screen
 
-扫描HomeBridge中Status页面下的二维码
+扫描 HomeBridge 中 Status 页面下的二维码
 
 ## Config 配置
 
