@@ -41,9 +41,9 @@ Then head to Homebridge `config.json`, and add a new accessory:
 }
 ```
 
-Replace your own token and IP address (If you don't know how to get IP address and token, read [this](https://github.com/PiotrMachowski/Xiaomi-cloud-tokens-extractor)
+Replace your own token and IP address (If you don't know how to get IP address and token, read[this](https://github.com/PiotrMachowski/Xiaomi-cloud-tokens-extractor)
 
-将 IP 地址和 token 替换为你自己的 (如果你不知道如何获取 IP 地址和 token ，请看 [这里](https://github.com/PiotrMachowski/Xiaomi-cloud-tokens-extractor)
+将 IP 地址和 token 替换为你自己的 (如果你不知道如何获取 IP 地址和 token ，请看[这里](https://github.com/PiotrMachowski/Xiaomi-cloud-tokens-extractor)
 
 Now reboot Homebridge and turn to your Apple Home app on your Apple device.
 
