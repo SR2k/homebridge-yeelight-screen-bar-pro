@@ -61,7 +61,9 @@ export class YeelightScreenBarProAccessory implements AccessoryPlugin {
 
     this.prepareAccessoryInformation()
     this.prepareMainLightService()
-    this.prepareBackgroundLightService()
+    if (this.config.backgroundDisable !== true) {
+      this.prepareBackgroundLightService()
+    }
   }
 
   getServices() {
