@@ -10,7 +10,7 @@ import {
   DEFAULT_POLLING_INTERVAL,
   DEFAULT_SMOOTH_INTERVAL,
 } from './constants'
-import { DehumidifierAccessoryConfig, IMapSetOptions, MiioProps, SwitchStatuses } from './typings'
+import { ScreenBarAccessoryConfig, IMapSetOptions, MiioProps, SwitchStatuses } from './typings'
 import { colorRepresentativeToRgb, hueSaturationToColorRepresentative, normalizeToNewRange } from './utils'
 
 const ALL_KEYS: Array<keyof MiioProps> = [
@@ -44,7 +44,7 @@ export class YeelightScreenBarProAccessory implements AccessoryPlugin {
 
   constructor(
     private readonly log: Logging,
-    private readonly config: DehumidifierAccessoryConfig,
+    private readonly config: ScreenBarAccessoryConfig,
     private readonly api: API,
   ) {
     this.config.backgroundColor = this.config.backgroundColor ?? true
@@ -61,7 +61,8 @@ export class YeelightScreenBarProAccessory implements AccessoryPlugin {
 
     this.prepareAccessoryInformation()
     this.prepareMainLightService()
-    if (this.config.backgroundDisable !== true) {
+
+    if (this.config.enableBackground ?? true) {
       this.prepareBackgroundLightService()
     }
   }

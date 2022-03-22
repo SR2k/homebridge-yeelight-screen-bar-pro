@@ -15,7 +15,7 @@ export const enum SwitchStatuses {
   Off = 'off',
 }
 
-export interface DehumidifierAccessoryConfig extends AccessoryConfig {
+export interface ScreenBarAccessoryConfig extends AccessoryConfig {
   ip: string
   token: string
   pollingInterval?: number
@@ -23,9 +23,9 @@ export interface DehumidifierAccessoryConfig extends AccessoryConfig {
   model?: string
   manufacturer?: string
   smoothInterval?: number
+  enableBackground?: boolean
   backgroundName?: string
   backgroundColor?: boolean
-  backgroundDisable?: boolean
 }
 
 export type NumberString = string
