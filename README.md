@@ -55,6 +55,7 @@ Fields explained:
 - `model` (string): Model field displayed in Home app
 - `manufacturer`: Manufacturer field in Home app
 - `smoothInterval` (number): The animation duration in milliseconds.
+- `enableBackground` (boolean, defaults to `true`): Enables the background light accessory.
 - `backgroundName` (string): Name for the second light bulb accessory to control ambient light.
 - `backgroundColor` (boolean):
   - `true`: Map ambient light to a color light bulb. This lets you control the ambient color and brightness via Siri or Home app.
@@ -69,6 +70,7 @@ Fields explained:
 - `model`: Home app 中显示的型号
 - `manufacturer`: Home app 中显示的制造商
 - `smoothInterval` (number): 切换灯光状态时的动画间隔
+- `enableBackground` (boolean, 默认值 `true`): 是否启用背景灯配件
 - `backgroundName` (string): 背景灯的名称
 - `backgroundColor` (boolean):
   - `true`: 将背景灯映射为一个彩色灯。此模式下你可以用 Siri 和 Home app 来控制背景灯的颜色和亮度
